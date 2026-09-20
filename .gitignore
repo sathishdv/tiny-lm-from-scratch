@@ -1,0 +1,15 @@
+# Binaries
+/bin/
+*.exe
+*.out
+
+# Test / coverage
+*.test
+coverage.out
+
+# Env / editor
+.env
+.DS_Store
+
+# Claude Code machine-local settings
+.claude/settings.local.json
