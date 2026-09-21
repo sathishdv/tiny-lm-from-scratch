@@ -3,9 +3,9 @@ package sample
 import (
 	"strings"
 
-	mathxI "github.com/sathishdv/tiny-llm-from-scratch/internal/mathx"
-	"github.com/sathishdv/tiny-llm-from-scratch/internal/model"
-	"github.com/sathishdv/tiny-llm-from-scratch/internal/token"
+	mathxI "github.com/sathishdv/tiny-lm-from-scratch/internal/mathx"
+	"github.com/sathishdv/tiny-lm-from-scratch/internal/model"
+	"github.com/sathishdv/tiny-lm-from-scratch/internal/token"
 )
 
 // ============================================================================

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/sathishdv/tiny-llm-from-scratch/internal/mathx"
+	"github.com/sathishdv/tiny-lm-from-scratch/internal/mathx"
 )
 
 // ============================================================================

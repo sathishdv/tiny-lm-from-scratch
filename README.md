@@ -1,4 +1,4 @@
-# tiny-llm-from-scratch
+# tiny-lm-from-scratch
 
 A complete, tiny language model written in Go with **no dependencies** — not even Go's
 `math` package. Exponentials, logarithms, `tanh`, and the random number generator are all

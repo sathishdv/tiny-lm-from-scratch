@@ -1,8 +1,8 @@
 package model
 
 import (
-	mathxI "github.com/sathishdv/tiny-llm-from-scratch/internal/mathx"
-	token "github.com/sathishdv/tiny-llm-from-scratch/internal/token"
+	mathxI "github.com/sathishdv/tiny-lm-from-scratch/internal/mathx"
+	token "github.com/sathishdv/tiny-lm-from-scratch/internal/token"
 )
 
 // TrainStep lets the model learn from one correct next-word example and
