@@ -30,25 +30,20 @@ package mathx
 // Everything a neural net needs: exp, ln, tanh, and randomness.
 // ============================================================================
 
-// exp computes e^x using range reduction + Taylor series.
-// Trick: e^x = (e^(x/2^n))^(2^n). We shrink x until it's small (where the
-// Taylor series converges fast), then square the result back up n times.
 /*
 Explain: computes the exponential function:
 
 exp(x) = e^x. where e≈2.71828. It is a foundational nonlinear operation in machine learning, especially for converting arbitrary scores into positive weights such as in softmax:
 
 softmax(zi) = e^(zi) / ∑j e^(zj)
-​
+
 The implementation avoids using Go’s standard math.Exp so it can build the math primitive from scratch.
 
-For negative input, it uses  e^−x = 1/e^x (line 13).
+For negative input, it uses  e^−x = 1/e^x (line 93).
 
-For positive input, it repeatedly halves
-x
-x until it is at most 0.5. Taylor series converge much more quickly for small values.
+For positive input, it repeatedly halves x until it is at most 0.5. Taylor series converge much more quickly for small values.
 
-It approximates e^x using the first 12 terms of the Taylor expansion (lines 31-39):
+It approximates e^x using the leading 1 plus the next 12 terms of the Taylor expansion, up to x^12/12! (lines 110-117):
 e^x = 1 + x + x^2/2! + x^3/3! + ...
 
 It then squares the result once for every halving, using:
@@ -56,9 +51,9 @@ e^x = (e^(x/2^n))^(2^n)
 
 This is range reduction, and it is what lets a short Taylor series remain useful for larger inputs.
 
-One important caveat: the overflow branch at line 18 returns literal 700, rather than a very large approximation of
-e^700 is roughly 10^304, returning 700 is not mathematically accurate and creates a sharp discontinuity. In a neural-network setting, a more typical approach is to stabilize
-the caller, for example by subtracting the largest logit before applying exp in softmax.
+Overflow: past about x = 709.78, e^x is too large for a float64 (e^700 is roughly 10^304). The clamp at line 96 lets the
+squaring overflow to +Inf, so e^−x correctly comes out as 0. Callers should still keep inputs small, for example by
+subtracting the largest logit before applying exp in softmax, as forward.go does.
 
 Example:
 // exp computes e^x, turning a number into a rapidly growing positive number.
@@ -80,14 +75,29 @@ Example:
 // square to return to the original scale.
 
 */
+
+// Exp computes e^x using range reduction + Taylor series.
+// Trick: e^x = (e^(x/2^n))^(2^n). We shrink x until it's small (where the
+// Taylor series converges fast), then square the result back up n times.
+//
+// For example, Exp(2) halves the input 2 -> 1 -> 0.5, estimates e^0.5 with
+// the Taylor series 1 + 0.5 + 0.5^2/2! + 0.5^3/3! + ..., which is about
+// 1.6487, then squares twice: 1.6487^2 is about 2.7183 (e^1), and 2.7183^2 is
+// about 7.389 (e^2). Make the input small, calculate where it is easy, then
+// repeatedly square to return to the original scale.
+//
+// Negative inputs use e^-x = 1/e^x. Beyond about x = 709.78, e^x is larger
+// than any float64, so Exp returns +Inf, and e^-x for such x is exactly 0.
 func Exp(x float64) float64 {
 	if x < 0 {
-		return 1 / Exp(-x) // 13
+		return 1 / Exp(-x)
 	}
 
-	if x > 700 {
-		// would overflow, so we return a large number instead of infinity
-		return 700
+	if x > 710 {
+		// e^710 is already too large for a float64, so squaring below
+		// overflows to +Inf, which is the honest answer. Clamping first stops
+		// the halving loop from running forever when x is itself +Inf.
+		x = 710
 	}
 
 	n := 0
@@ -127,17 +137,38 @@ func Exp(x float64) float64 {
 //	guess y = 1:     e^1     = 2.718, so turn the dial down
 //	guess y = 0.736: e^0.736 = 2.088, so make a smaller adjustment
 //
-// The loop stops when an adjustment is so small that the answer is accurate
-// enough for this float64 calculation. Natural logs exist only for x > 0.
+// Guessing only works quickly when the answer is near the first guess, so x
+// is first divided by e until it lies between 1 and e, counting the
+// divisions: ln(700) = 6 + ln(700/e^6) = 6 + ln(1.735). The dial then only
+// ever has to find a number between 0 and 1. Natural logs exist only for x > 0.
 func Ln(x float64) float64 {
 	// Zero and negative numbers cannot be produced by e^y.
 	if x <= 0 {
 		panic("ln(x) is undefined for x <= 0")
 	}
 
+	// x - x is 0 for every ordinary number. Only +Inf and NaN fail that test,
+	// and each is its own logarithm. Without this check, the loop below would
+	// divide infinity by e forever.
+	if x-x != 0 {
+		return x
+	}
+
 	// e^0 is exactly 1, so ln(1) is exactly 0.
 	if x == 1 {
 		return 0
+	}
+
+	// Pull out whole factors of e until x lies in [1, e).
+	e := Exp(1)
+	k := 0.0
+	for x >= e {
+		x /= e
+		k++
+	}
+	for x < 1 {
+		x *= e
+		k--
 	}
 
 	// Start with the simple guess y = 0, then improve it below.
@@ -155,7 +186,7 @@ func Ln(x float64) float64 {
 			break
 		}
 	}
-	return y
+	return y + k
 }
 
 // tanh squashes any number into the range (-1, 1). This is useful in a neural

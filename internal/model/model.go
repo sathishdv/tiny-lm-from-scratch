@@ -9,7 +9,7 @@ import (
 // ============================================================================
 
 const (
-	// The model has a vocabulary of 12 words, each represented by a 4-dimensional embedding vector. The model sees two words of context and predicts the next word.
+	// The model has a vocabulary of 13 tokens, each represented by a 4-dimensional embedding vector. The model sees two words of context and predicts the next word.
 	embeddingDim = 4                          // Each word is represented by a 4-dimensional vector.
 	contextSize  = 2                          // The model sees two words of context.
 	inputDim     = embeddingDim * contextSize // The input to the model is the concatenation of two word embeddings.
@@ -47,12 +47,12 @@ type Model struct {
 // matrices with small pseudo-random values from rng, scaled by 0.3; their
 // values are centered approximately around zero. It starts all biases at zero.
 //
-// For example, when vocabSize is 12 and the context is "the cat", New creates:
+// For example, when vocabSize is 13 and the context is "the cat", New creates:
 //
-//   - 12 embeddings with 4 numbers each, one row for each vocabulary ID;
+//   - 13 embeddings with 4 numbers each, one row for each vocabulary ID;
 //   - 8 by 6 hidden weights, connecting the two joined 4-number embeddings to
 //     6 hidden values; and
-//   - 6 by 12 output weights, connecting those hidden values to 12 word scores.
+//   - 6 by 13 output weights, connecting those hidden values to 13 word scores.
 //
 // The small random starting values are important because they give different
 // connections different starting points. During training, those differences
@@ -97,18 +97,18 @@ func randMatrix(rows, cols int, scale float64, rng *mathx.RNG) [][]float64 {
 // possible next words. This method only counts the knobs; it does not change
 // them or make a prediction.
 //
-// For a model with 12 vocabulary words, the count is:
+// For a model with 13 vocabulary tokens, the count is:
 //
-//	12 embeddings * 4 numbers = 48
+//	13 embeddings * 4 numbers = 52
 //	8 input values * 6 hidden values = 48 hidden weights
 //	6 hidden biases = 6
-//	6 hidden values * 12 word scores = 72 output weights
-//	12 output biases = 12
-//	total = 186 parameters
+//	6 hidden values * 13 word scores = 78 output weights
+//	13 output biases = 13
+//	total = 197 parameters
 //
 // The total is a simple measure of model size. More parameters provide more
 // numbers that training can adjust, but also require more memory and work to
-// train. This small model has 186 parameters; large language models use the
+// train. This small model has 197 parameters; large language models use the
 // same idea with far more parameters.
 func (m *Model) ParamCount() int {
 	n := len(m.Embeddings)*embeddingDim + inputDim*hiddenDim + hiddenDim

@@ -80,6 +80,7 @@ make vet      # static analysis
 
 - **Reproducible by design.** The RNG is seeded with a fixed value (`42`), so every run
   produces identical output — which makes the training curve debuggable.
-- **It overfits on purpose-built data.** Validation loss bottoms out around epoch 150 and
-  then climbs while training loss stays flat. That gap is the textbook overfitting curve,
+- **It overfits on purpose-built data.** Validation loss bottoms out at 0.4117 around epoch
+  36 (the printed table samples every 150 epochs, so it doesn't show this) and then climbs
+  while training loss stays flat. That gap is the textbook overfitting curve,
   visible in a model small enough to inspect by hand.
