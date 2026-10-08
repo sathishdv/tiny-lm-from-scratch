@@ -1,4 +1,4 @@
-BINARY := simple-lang-model
+BINARY := tiny-language-model
 PKG := ./cmd/$(BINARY)
 
 .PHONY: build run test fmt vet tidy clean

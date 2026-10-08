@@ -47,7 +47,7 @@ The code is organized as seven stages, each building on the last:
 | 4 | `internal/model` (`forward.go`) | Forward pass: two words → a probability for every vocabulary word |
 | 5 | `internal/model` (`backward.go`) | Cross-entropy loss and backpropagation |
 | 6 | `internal/sample` | Sampling with a temperature dial; generating whole sentences |
-| 7 | `cmd/simple-lang-model` | Wires it together: train, evaluate, inspect, generate |
+| 7 | `cmd/tiny-language-model` | Wires it together: train, evaluate, inspect, generate |
 
 The core loop — embed → combine → predict → measure surprise → propagate blame backward →
 nudge every parameter — is the same one that trains frontier models. The differences are
@@ -58,7 +58,7 @@ idea this omits by design: attention.
 
 ```
 .
-├── cmd/simple-lang-model/   # main entrypoint + training loop
+├── cmd/tiny-language-model/   # main entrypoint + training loop
 ├── internal/mathx/          # math primitives from scratch
 ├── internal/token/          # tokenizer, vocabulary, dataset
 ├── internal/model/          # parameters, forward pass, backprop
@@ -71,7 +71,7 @@ idea this omits by design: attention.
 
 ```bash
 make run      # train and generate
-make build    # build to ./bin/simple-lang-model
+make build    # build to ./bin/tiny-language-model
 make test     # run tests
 make vet      # static analysis
 ```
